@@ -122,17 +122,54 @@ Windows. You'll get:
 > The PIN dialog belongs to a background process, so it can open *behind*
 > Chrome. If a signature seems to hang, look in the Dock for a Java icon.
 
-### Does it survive a reboot? Yes — and nothing autostarts
+### How Chrome finds it, and why nothing autostarts
 
-A native messaging host is not a daemon. Chrome `exec`s it when the portal asks
-for a signature, talks to it over a pipe, and it exits with the tab. It *cannot*
-be started at login: the protocol is that stdin/stdout pair, so a process
-launched by `launchd` would have nothing to talk to.
+A native messaging host is not a daemon and cannot be one. Chrome `exec`s it when
+the portal asks for a signature, talks to it over the process's own stdin and
+stdout, and it exits with the tab. Starting it at login would be meaningless —
+the protocol *is* that stdin/stdout pair, so a process launched by `launchd`
+would have no one on the other end.
 
-What persists is a JSON manifest that Chrome reads at every startup. `make
-install` writes it once. So there is no launch agent, no login item, and nothing
-running in the background between signatures — and after a reboot it simply
-works. `make status` confirms the files are still in place.
+So nothing needs to autostart. What persists instead is a small JSON file that
+Chrome looks for by convention. Drop it in the right directory and Chrome finds
+the host by itself:
+
+```
+~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.dxc.eproc.pki.json
+```
+
+Chrome scans that directory at startup, and the file name must be the host name
+the extension asks for — here `com.dxc.eproc.pki`. Inside:
+
+```json
+{
+  "name": "com.dxc.eproc.pki",
+  "description": "eProcurement digital signing host (macOS)",
+  "path": "/Users/you/Library/Application Support/eProcSigner/run-host.sh",
+  "type": "stdio",
+  "allowed_origins": [ "chrome-extension://oneboplbahpaldoloieajnbibaeocdlj/" ]
+}
+```
+
+`path` is the executable Chrome runs — it must be absolute, and executable.
+`allowed_origins` is the allow-list of extensions permitted to open the pipe;
+anything else Chrome refuses, which is why a web page cannot reach the host.
+
+`make install` writes one of these per browser it finds — the Chrome channels,
+Chromium, Edge and Brave use the same format under their own support
+directories, and Firefox uses `~/Library/Application
+Support/Mozilla/NativeMessagingHosts/` with `allowed_extensions` instead. That's
+the whole registration: no launch agent, no login item, nothing running between
+signatures. After a reboot it simply works, because the file is still there.
+
+The one catch: **Chrome reads these only at startup**, so a fresh install needs
+a full ⌘Q and reopen, not just a new tab. `make status` verifies each manifest
+exists and that its `path` still points at something executable.
+
+> Chrome's own documentation:
+> [Native messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)
+> (host manifest location and format). Firefox's equivalent:
+> [Native manifests](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_manifests).
 
 ## Verify it works
 
@@ -235,10 +272,12 @@ make diagnose
 ```
 
 One PIN prompt, then every certificate on the token with its key usage and an
-actual signature attempt. `SIGNS OK` means the certificate works on this Mac —
-so if the portal still refuses it, the problem is at the portal (usually the
-DSC enrolled against your account is a different one). Worked example, including
-why two certificates from the same CA behave differently, in
+actual signature attempt. `SIGNS OK` means the certificate works on this Mac, so
+if the portal still refuses it the problem is at the portal — either the DSC
+enrolled against your account is a different one, or the portal's own list of
+accepted CAs doesn't have yours. Note *where* it refuses, too: a certificate
+that logs in and browses fine and only fails at bid submission is failing a
+server-side check, not anything local. Worked example in
 [docs/CERTIFICATES.md](docs/CERTIFICATES.md).
 
 **"No certificates found."** Check the token is visible at all:
