@@ -288,6 +288,18 @@ pkcs11-tool --module ~/Library/Application\ Support/eProcSigner/libcastle_v2.1.0
 
 If that lists no slots, it's a token or driver problem, not this host.
 
+**"No DSC token detected"**, or from an older build, `Cannot initialize KeyStore:
+Reason - PKCS11 not found`. The module loaded but reports no token in any slot.
+Usually the token simply isn't in, or was inserted after the page asked to sign.
+Reseat it and reload the tab — the host is launched per request, so nothing needs
+restarting. If it persists, check that no other process is holding the token: the
+module does not share it, and a host left over from an earlier tab is enough to
+block a new one.
+
+```bash
+pgrep -fl com.eproc.mac.Launcher     # expect no output between signatures
+```
+
 **A different token.** Any PKCS#11 module works — set `pkcs11.library` in
 `~/Library/Application Support/eProcSigner/esigner.properties`. Note that
 **OpenSC will not drive an ePass2003/HYP2003**: it reaches the card, but the

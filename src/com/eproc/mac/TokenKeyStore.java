@@ -59,6 +59,15 @@ public final class TokenKeyStore extends KeyStoreSpi {
             if (token == null) {
                 throw new IOException(MacSignerProvider.tokenError());
             }
+            // SunPKCS11 loads the library happily with an empty slot, but then
+            // registers no KeyStore service at all — which surfaces as a bare
+            // "PKCS11 not found". Check here so the commonest failure says so,
+            // and so we never ask for a PIN the user would type for nothing.
+            if (token.getService("KeyStore", "PKCS11") == null) {
+                throw new IOException("No DSC token detected. The PKCS#11 module "
+                        + "loaded but reports no token in any slot — plug the token "
+                        + "in and try again.");
+            }
             char[] pin = password;
             if (pin == null) {
                 pin = PinDialog.ask(tokenLabel(token));
