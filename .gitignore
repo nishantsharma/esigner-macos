@@ -17,3 +17,6 @@ test/*.pem
 test/*.der
 
 .DS_Store
+
+# Drafts that are mine, not the project's
+linkedin-post.md

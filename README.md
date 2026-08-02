@@ -1,12 +1,22 @@
-# eSigner for macOS
+# Use KPPP and other eProcurement portals on your Mac
 
-Sign eProcurement tenders on a Mac with your DSC token.
+**Bid and sign tenders on macOS with your DSC token — no Windows machine, no VM,
+no Parallels licence.**
 
-The Karnataka eProcurement portal (and other DXC-built state portals) requires a
-browser signing helper called **eSigner**, shipped only as a Windows kit. It
-installs via `.bat` files and reaches your certificate through the Windows
-certificate store, so there is no way to run it on macOS as delivered — the
-usual advice is to keep a Windows machine or a VM around.
+Built and verified against the Karnataka eProcurement portal (KPPP). The same
+eSigner ships across the state eProcurement portals built by
+[DXC Technology](https://www.dxc.com/), so the other states should work too —
+that part is reasoning rather than evidence, and
+[reports and PRs are welcome](CONTRIBUTING.md). Chrome on macOS, your existing
+DSC token, and the certificate chooser and PIN prompt you already know from
+Windows.
+
+---
+
+These portals require a browser signing helper called **eSigner**, shipped only
+as a Windows kit. It installs via `.bat` files and reaches your certificate
+through the Windows certificate store, so there is no way to run it on macOS as
+delivered — the usual advice is to keep a Windows machine or a VM around.
 
 This is a native macOS host for it. The signer's own code is **not modified**;
 what changes is where it finds your certificate — the DSC token directly, over
@@ -53,7 +63,7 @@ them. `make deps` extracts what it needs from your own copies.
 ## Install
 
 ```bash
-git clone https://github.com/<you>/esigner-macos.git
+git clone https://github.com/nishantsharma/esigner-macos.git
 cd esigner-macos
 make install
 ```
@@ -175,8 +185,9 @@ prompted, CMS signature produced and verified against its signer certificate.
 - **Browsers other than Chrome.** Manifests are written for Chrome Beta/Canary,
   Chromium, Edge, Brave and Firefox because the format is identical, but only
   Chrome has been exercised.
-- **Other tokens and other portals.** Any PKCS#11 token on any DXC portal
-  running eSigner 1.9 should work, but that is reasoning, not evidence. Reports
+- **Other tokens and other portals.** Any PKCS#11 token on any
+  [DXC](https://www.dxc.com/)-built portal running eSigner 1.9 should work, but
+  that is reasoning, not evidence. Reports
   welcome.
 
 ## Troubleshooting
@@ -281,8 +292,9 @@ gets a reply. Verify it works for you with `make test-token` before you depend
 on it. Pull requests widening the tested surface are genuinely welcome —
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Not affiliated with, endorsed by, or supported by DXC Technology, the
-Government of Karnataka, or Hypersecu. Nothing here is decompiled, patched or
+Not affiliated with, endorsed by, or supported by
+[DXC Technology](https://www.dxc.com/), the Government of Karnataka, or
+Hypersecu. Nothing here is decompiled, patched or
 redistributed: `eSigner.jar` is used exactly as shipped, and both vendor
 binaries are fetched from your own copies at build time.
 
