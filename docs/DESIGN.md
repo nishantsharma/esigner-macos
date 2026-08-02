@@ -25,6 +25,8 @@ library's own path and passes a null provider.)
 
 ## How this works
 
+![The same eSigner.jar on Windows and macOS, diverging at one keystore lookup](architecture.svg)
+
 Instead of patching two decompiled classes, this registers a JCE provider
 **named `SunMSCAPI`** that offers a KeyStore **named `Windows-MY`**, backed by
 the DSC token over PKCS#11. Both call sites then succeed unchanged.
@@ -64,6 +66,7 @@ their hardcoded `AppData\Local\...` log path to `~/Library/Logs/eProcSigner/`.
 | `scripts/install-host.sh` / `uninstall-host.sh` | Deploy to `~/Library/Application Support/eProcSigner/`, write browser manifests |
 | `scripts/status.sh` | Post-install health check (`make status`) |
 | `scripts/verify-deps.sh` | Vendor binary code-signature and hash check (`make verify-deps`) |
+| `test/CertDiagnostic.java` | Per-certificate key-usage report and signing attempt (`make diagnose`) |
 | `run-host.sh` | What Chrome execs |
 
 The two shadowed `com.dxc.eproc.pki` classes are the only place this repo takes

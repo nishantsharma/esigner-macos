@@ -22,6 +22,9 @@ This is a native macOS host for it. The signer's own code is **not modified**;
 what changes is where it finds your certificate — the DSC token directly, over
 PKCS#11, instead of the Windows certificate store.
 
+![Windows and macOS side by side: the same eSigner.jar, a different certificate store](docs/architecture.svg)
+
+> [!IMPORTANT]
 > **As-is, no author support.** This was built for one person's token, one Mac
 > and one portal, then written up so nobody has to redo it. It is offered with
 > no warranty and no support — issues may go unanswered, and I can't debug your
@@ -50,14 +53,20 @@ the wrong "driver" is the one mistake here with real consequences.
 Those two are third-party proprietary binaries, so this repo does not ship
 them. `make deps` extracts what it needs from your own copies.
 
-> ⚠️ **Where you get the driver matters more than anything else here.** It is
-> native code that runs inside the signing process and sees your PIN. Do not
-> search for it and click the first result — driver-download sites are a
-> standard malware route. Trace a link from your Certifying Authority or type
-> the vendor's domain by hand, then verify the Apple Developer ID signature.
-> `make verify-deps` does the checking;
-> [SECURITY.md §4](SECURITY.md#4-getting-the-vendor-binaries-safely) explains
-> the chain, including why the signature legitimately reads *FEITIAN* rather
+> [!CAUTION]
+> ### 🛑 Never download the driver from a search result
+>
+> **The PKCS#11 module runs inside the signing process and sees your PIN.** It is
+> the single highest-consequence file here, and driver-download aggregators are a
+> standard malware route — they rank well precisely because people search.
+>
+> Instead: trace a link from your Certifying Authority's own support page, or type
+> the vendor's domain by hand. Then **verify rather than trust the link** —
+> `make verify-deps` checks the Apple Developer ID signature and refuses to
+> install a module that doesn't match.
+>
+> [**SECURITY.md §4**](SECURITY.md#4-getting-the-vendor-binaries-safely) walks the
+> whole chain, including why the signature legitimately reads *FEITIAN* rather
 > than *Hypersecu*.
 
 ## Install
