@@ -312,7 +312,7 @@ logged, never sent to the browser. Only the allow-listed extension can open the
 pipe to the host. Nothing runs as root and nothing runs in the background.
 
 Two things you should know rather than discover: **one PIN entry unlocks the
-token for the life of the host process**, and **the vendor's signer uploads over
+token for the life of the host process**, and **DXC's signer uploads over
 TLS with certificate and hostname verification disabled**. Both are inherited
 from the Windows kit, not introduced here; the second is why you should sign
 from a network you trust.

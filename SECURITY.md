@@ -10,6 +10,20 @@ my word for it.
 
 ![Where the secrets go](docs/secret-flow.svg)
 
+### Two vendors, and they are not the same party
+
+This document names both, because a finding against one is not a finding
+against the other:
+
+| | Who | What they supply |
+|---|---|---|
+| **The signer** | **[DXC Technology](https://www.dxc.com/)** | `eSigner.jar`, and the browser extension the portal serves. Every class outside the bundled libraries is under `com.dxc.eproc.pki`, and its `Main-Class` is `com.dxc.eproc.pki.EprocSigner`. |
+| **The token driver** | **Feitian Technologies** (sold in India as Hypersecu / HYPERPKI) | `libcastle_v2.1.0.0.dylib`, the PKCS#11 module that talks to the HYP2003 token. |
+
+§3.2 below is about **DXC's** code. §4 is about obtaining **Feitian's** module
+safely. Where the word "vendor" appears unqualified elsewhere, it means whichever
+of the two supplies the file under discussion.
+
 ---
 
 ## 1. What runs, and with what privileges
@@ -67,8 +81,8 @@ throws. Nothing here can add, delete or overwrite anything on your token.
 
 ## 3. What is *not* protected
 
-Be aware of these. Two are inherited from the vendor's software and exist
-identically on Windows; this port neither introduces nor fixes them.
+Be aware of these. Two are inherited from DXC's signer and exist identically on
+Windows; this port neither introduces nor fixes them.
 
 ### 3.1 One PIN entry unlocks the token for the whole process
 
@@ -80,11 +94,11 @@ from the portal will not prompt you again.**
 
 To end the session: close the portal tab (the host exits), or unplug the token.
 
-### 3.2 The vendor signer disables TLS verification (inherited)
+### 3.2 DXC's signer disables TLS verification (inherited)
 
-`eSigner.jar` — the vendor's own code, used here unmodified — makes outbound
-HTTPS calls with Apache HttpClient configured to accept **any** certificate from
-**any** host:
+`eSigner.jar` — [DXC](https://www.dxc.com/)'s own code, used here unmodified —
+makes outbound HTTPS calls with Apache HttpClient configured to accept **any**
+certificate from **any** host:
 
 ```
 $ javap -p -c com/dxc/eproc/pki/EprocSigner.class | grep -c NoopHostnameVerifier
@@ -116,7 +130,7 @@ in the shipped Windows product, not something a macOS port can repair.
 
 ### 3.3 The PKCS#11 module is native code in your process
 
-The vendor `.dylib` is loaded into the JVM and, by construction, sees your PIN —
+Feitian's `.dylib` is loaded into the JVM and, by construction, sees your PIN —
 that is how `C_Login` works. A tampered module could capture it. This is
 inherent to PKCS#11 on every platform, and it is precisely why §4 matters.
 
@@ -238,7 +252,7 @@ wc -l src/**/*.java && $EDITOR src/com/eproc/mac/TokenKeyStore.java
 # Does the host open any network connection while signing?
 sudo lsof -nP -p $(pgrep -f com.eproc.mac.Launcher) | grep -i tcp
 
-# What does the vendor signer do? (needs the jar extracted)
+# What does DXC's signer do? (needs the jar extracted)
 javap -p -c com/dxc/eproc/pki/EprocSigner.class | less
 
 # Prove the key is non-extractable
